@@ -12,10 +12,12 @@ pid = os.getpid()
 def get_input():
     return os.read(0, 1024).decode()[:-1]
 
-#TODO:
-#implement 
 def change_directory(cmd):
-    pass
+    #os.write(1,("Current Working Directory " + os.getcwd()).encode())
+    command, path = re.split(' ', cmd) #Because command is cd PATH
+    if path != '..':
+        path = os.getcwd() + '/' + path
+    os.chdir(path)
 
 def execute_command(cmd):
     rc = os.fork()
@@ -35,6 +37,13 @@ def execute_command(cmd):
         childpidcode = os.wait()
         os.write(1, ("Parent: Child %d terminated with exit code %d\n" % childpidcode).encode())
 
+def list_directory():
+    #os.write(1,("Current Working Directory " + os.getcwd()).encode())
+    dirList = os.listdir(os.getcwd().encode())
+    for i in dirList:
+        os.write(1, (i))
+        os.write(1, ("\n").encode())
+
 def process_user_input(cmd):
     if cmd == '':
         if not os.isatty(sys.stdin.fileno()): #checks if fd is open and connected to a tty
@@ -44,6 +53,9 @@ def process_user_input(cmd):
         sys.exit(0)
     elif 'cd' in cmd:
         change_directory(cmd)
+    elif 'ls' in cmd:
+        list_directory()
+
     else:
         execute_command(cmd)
 
