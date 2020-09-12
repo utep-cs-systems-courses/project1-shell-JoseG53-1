@@ -27,22 +27,49 @@ def execute_command(cmd):
         sys.exit(1)
     
     elif rc == 0:
-        os.write(1, ("Child: My pid==%d. Parent's pid=%d\n" % (os.getpid(), pid)).encode())
-        time.sleep(1)
-        os.write(1, "Child .......terminating now with exit code 0\n".encode())
-        sys.exit(0)
+        args = [i.strip() for i in re.split(" ", cmd)]
+        if '/' in args[0]:
+            exec_path(args)
+        else:
+            global_exec(args)
+        os.write(2, ("Command %s not found\n" % args[0]).encode())
+        sys.exit(1)
     
     else:
-        os.write(1, ("Parent: My pid=%d. Child's pid=%d\n" % (pid, rc)).encode())
-        childpidcode = os.wait()
-        os.write(1, ("Parent: Child %d terminated with exit code %d\n" % childpidcode).encode())
+        r_child = os.waitpid(rc, 0)
 
-def list_directory():
-    #os.write(1,("Current Working Directory " + os.getcwd()).encode())
-    dirList = os.listdir(os.getcwd().encode())
-    for i in dirList:
-        os.write(1, (i))
-        os.write(1, ("\n").encode())
+def global_exec(args):
+    for dir in re.split(":", os.environ['PATH']): # :
+        program = "%s/%s" % (dir, args[0])
+        try:
+            os.execve(program, args, os.environ)
+        except FileNotFoundError:
+            pass    
+
+
+def redirect_output(cmd):
+    command, path = [i.strip() for i in re.split(">", cmd)] # splits by the > symbol
+    path = os.getcwd() + '/' + path
+    command = [i.strip() for i in re.split(" ", command)]
+
+    rc = os.fork()
+    if rc < 0:
+        os.write(2, ("fork failed, returning %d\n").encode())
+        sys.exit(1)
+    elif rc == 0:
+        os.close(1) #close stdout
+
+        sys.stdout = open(path, "w+")
+        fd = sys.stdout.fileno()
+        os.set_inheritable(fd, True)
+        os.dup(fd)
+
+        global_exec(command)
+        os.write(2, ("Command %s not found\n" % args[0]).encode())
+        sys.exit(1)
+    else:
+        r_child = os.waitpid(rc, 0) 
+
 
 def process_user_input(cmd):
     if cmd == '':
@@ -53,9 +80,10 @@ def process_user_input(cmd):
         sys.exit(0)
     elif 'cd' in cmd:
         change_directory(cmd)
-    elif 'ls' in cmd:
-        list_directory()
-
+    elif '^C' in cmd: # ^C
+        sys.exit(0)
+    elif '>' in cmd: # >
+        redirect_output(cmd)
     else:
         execute_command(cmd)
 
