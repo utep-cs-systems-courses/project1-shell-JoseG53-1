@@ -37,6 +37,23 @@ def execute_command(cmd):
     else:
         r_child = os.waitpid(rc, 0)
 
+def execute_background_command(cmd):
+    rc = os.fork()
+
+    if rc < 0:
+        os.write(2,("fork failed, returning %d\n" % rc).encode())
+        sys.exit(1)
+    
+    elif rc == 0:
+        args = [i.strip() for i in re.split(" ", cmd)]
+        if '/' in args[0]:
+            exec_path(args)
+        else:
+            global_exec(args)
+        os.write(2, ("Command %s not found\n" % args[0]).encode())
+        sys.exit(1)
+        
+
 def global_exec(args):
     for dir in re.split(":", os.environ['PATH']): # :
         program = "%s/%s" % (dir, args[0])
@@ -127,16 +144,10 @@ def simple_pipe_cmd(cmd):
         global_exec(commands[1].split())
 
 
-
-#TODO
 def run_in_background(cmd):
-    print("IN THE BACKGROUND METHOD")
     command, amp= [i.strip() for i in re.split("&", cmd)]
-    print("COMMAND IN BACKGROUND")
-    print(command)
-    command, task = [i.strip() for i in re.split(" ", command)]  
-    pass
-
+    execute_background_command(command)  
+    
 
 def process_user_input(cmd):
     if cmd == '':
