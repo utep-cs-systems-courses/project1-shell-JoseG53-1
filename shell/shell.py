@@ -122,8 +122,6 @@ def simple_pipe_cmd(cmd):
         os.set_inheritable(fd, True)
     
     commands = [i.strip() for i in re.split('[\x7c]', cmd)] # split by | had to use hex beacause "|" would split by char
-    print("COMMANDS")
-    print(commands)
     rc = os.fork()
 
     if rc < 0: #fork failed
@@ -143,14 +141,7 @@ def simple_pipe_cmd(cmd):
         os.set_inheritable(0, True)
         for fd in (w, r):
             os.close(fd)
-        global_exec(commands[1].split())
-
-
-def run_in_background(cmd):
-    command, amp= [i.strip() for i in re.split("&", cmd)]
-    print(amp)
-    execute_background_command(command)  
-    
+        global_exec(commands[1].split())    
 
 def process_user_input(cmd):
     if cmd == '':
