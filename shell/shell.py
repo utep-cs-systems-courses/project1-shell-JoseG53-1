@@ -38,6 +38,7 @@ def execute_command(cmd):
         r_child = os.waitpid(rc, 0)
 
 def execute_background_command(cmd):
+    command, amp= [i.strip() for i in re.split("&", cmd)]
     rc = os.fork()
 
     if rc < 0:
@@ -45,7 +46,8 @@ def execute_background_command(cmd):
         sys.exit(1)
     
     elif rc == 0:
-        args = [i.strip() for i in re.split(" ", cmd)]
+        args = [i.strip() for i in re.split(" ", command)]
+        print("ARGS" + str(args))
         if '/' in args[0]:
             exec_path(args)
         else:
@@ -146,6 +148,7 @@ def simple_pipe_cmd(cmd):
 
 def run_in_background(cmd):
     command, amp= [i.strip() for i in re.split("&", cmd)]
+    print(amp)
     execute_background_command(command)  
     
 
@@ -167,7 +170,7 @@ def process_user_input(cmd):
     elif '|' in cmd:
         simple_pipe_cmd(cmd)
     elif '&' in cmd:
-        run_in_background(cmd)
+        execute_background_command(cmd)
     else:
         execute_command(cmd)
 
