@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 #Author: Jose Gallardo
 #Description: Simple shell in pyhton
 #Note: 
@@ -82,10 +84,9 @@ def redirect_output(cmd):
     elif rc == 0:
         os.close(1) #close stdout
 
-        sys.stdout = open(path, "w+")
+        sys.stdout = open(path, "w")
         fd = sys.stdout.fileno()
         os.set_inheritable(fd, True)
-        os.dup(fd)
 
         global_exec(command)
         os.write(2, ("Command %s not found\n" % args[0]).encode())
@@ -108,7 +109,6 @@ def redirect_input(cmd):
         sys.stdout = open(path, "r")
         fd = sys.stdout.fileno()
         os.set_inheritable(fd, True)
-        os.dup(fd)
 
         global_exec(command)
         os.write(2, ("Command %s not found\n" % args[0]).encode())
