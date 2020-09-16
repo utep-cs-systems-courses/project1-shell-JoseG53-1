@@ -49,7 +49,6 @@ def execute_background_command(cmd):
     
     elif rc == 0:
         args = [i.strip() for i in re.split(" ", command)]
-        print("ARGS" + str(args))
         if '/' in args[0]:
             exec_path(args)
         else:
